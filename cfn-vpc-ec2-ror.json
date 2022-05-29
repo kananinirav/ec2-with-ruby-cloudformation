@@ -131,20 +131,6 @@
         "SubnetId": { "Ref" : "PublicSubnet" }
       }
     },
-    "AZANatGatewayEIP": {
-      "Type": "AWS::EC2::EIP",
-      "DependsOn": "GatewayToInternet",
-      "Properties": {
-        "Domain": "vpc"
-      }
-    },
-    "AZANatGateway": {
-      "Type": "AWS::EC2::NatGateway",
-      "Properties": {
-        "AllocationId": { "Fn::GetAtt" : [ "AZANatGatewayEIP", "AllocationId" ] },
-        "SubnetId": { "Ref" : "PublicSubnet" }
-      }
-    },
     "PrivateSubnetRouteTable": {
       "Type": "AWS::EC2::RouteTable",
       "Properties": {
@@ -152,14 +138,6 @@
         "Tags": [
           { "Key" : "Name", "Value" :  { "Fn::Sub": "${AWS::StackName}-private" } }
         ]
-      }
-    },
-    "PrivateSubnetRoute": {
-      "Type": "AWS::EC2::Route",
-      "Properties": {
-        "RouteTableId": { "Ref": "PrivateSubnetRouteTable" },
-        "DestinationCidrBlock": "0.0.0.0/0",
-        "NatGatewayId": { "Ref": "AZANatGateway" }
       }
     },
     "PrivateSubnet": {
@@ -191,6 +169,13 @@
             "ToPort": 22,
             "CidrIp": { "Ref" : "SSHLocation"},
             "Description": "For traffic from Internet"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "CidrIp": { "Ref" : "SSHLocation"},
+            "Description": "For traffic from Internet Http"
           }
         ],
         "GroupDescription": "Security Group for demo server",
@@ -298,7 +283,6 @@
         "BlockDeviceMappings": [
           {
             "DeviceName": "/dev/sda1",
-            "VirtualName" : "sda1",
             "Ebs": {
               "DeleteOnTermination": "true",
               "VolumeSize": "8",
